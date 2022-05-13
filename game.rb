@@ -1,12 +1,32 @@
-require "./board.rb"
+require './board'
+require 'pry-byebug'
 
 class Game
+  attr_accessor :board
+
   def initialize
     @board = Board.new
   end
-  attr_accessor :board
 
-  def guess
+  def start_game
+    select_secret_colors
+    compare_guess_with_secret_colors(guess_secret_color)
+  end
+
+  def guess_secret_color
+    puts 'Guess the secret colors!'
+    guess = select_colors
+    board.place_guess(guess)
+    guess
+  end
+
+  def select_secret_colors
+    puts 'Select your secret colors.'
+    selection = select_colors
+    board.place_secret_colors(selection)
+  end
+
+  def select_colors
     chosen_colors = []
     possible_colors = %w[Red Green Blue Purple Orange Yellow]
     4.times do
@@ -16,15 +36,39 @@ class Game
       color = possible_colors[gets.to_i - 1]
       chosen_colors.push(color)
     end
-    board.place_guess(chosen_colors)
-    chosen_colors.clear
+    chosen_colors
   end
 
   def game_over
     false
   end
+
+  def compare_guess_with_secret_colors(guess)
+    secret = board.secret
+    check_color_and_position(guess, secret)
+    check_only_colors(guess, secret)
+  end
+
+  def check_color_and_position(guess, secret)
+    guess.each_index { |i| p guess[i] == secret[i] }
+  end
+
+  def check_only_colors(guess, secret)
+    num_of_correct = {}
+    guess.each_with_index do |l, _i|
+      num_of_correct[l] = guess.count(l) <= secret.count(l) ? guess.count(l) : next
+    end
+    p num_of_correct
+  end
 end
 
-game = Game.new
+# Take the latest guess of four colors, loop through secret colors, does
 
-game.guess until game.game_over
+# the secret contain the color of the guess? How many instances of that color?
+# TODO NR2, check if the colors are in the correct place.
+
+game = Game.new
+game.start_game
+
+# # game.guess_secret_color until game.game_over
+# game.start_game
