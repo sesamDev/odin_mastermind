@@ -40,17 +40,37 @@ class Game
   end
 
   def game_over
-    false
+    p 'Game over, the code was cracked!'
+    exit
   end
 
   def compare_guess_with_secret_colors(guess)
     secret = board.secret
-    check_color_and_position(guess, secret)
-    check_only_colors(guess, secret)
+    checked_guess = check_color_and_position(guess, secret)
+    num_of_correct = check_only_colors(checked_guess[0], checked_guess[1])
+    keys = checked_guess[2]
+    num_of_correct.values.sum.times { keys.push('WK') }
+    p keys
+    board.place_keys(keys)
   end
 
+  # def award_keys(correct_col_pos, correct_col)
+  #   colored_key = Array.new()
+  # end
+
   def check_color_and_position(guess, secret)
-    guess.each_index { |i| p guess[i] == secret[i] }
+    checked_guess = [[], [], []]
+    correct_guess = 0
+    guess.each_index do |i|
+      if guess[i] == secret[i]
+        puts "Guess nr #{i + 1}, #{guess[i]} was correct, have a colored key"
+        correct_guess += 1
+        checked_guess[2].push('CK')
+      else
+        checked_guess[0].push(guess[i]) && checked_guess[1].push(secret[i])
+      end
+    end
+    correct_guess == 4 ? game_over : checked_guess
   end
 
   def check_only_colors(guess, secret)
@@ -58,7 +78,8 @@ class Game
     guess.each_with_index do |l, _i|
       num_of_correct[l] = guess.count(l) <= secret.count(l) ? guess.count(l) : next
     end
-    p num_of_correct
+    puts "These colors are in the code, #{num_of_correct}, but your position was wrong , have white keys."
+    num_of_correct
   end
 end
 
