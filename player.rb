@@ -1,6 +1,5 @@
 class Player
-  def initialize; end
+  def initialize(name)
+    @name = name
+  end
 end
-
-player = Player.new
-p player

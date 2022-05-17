@@ -1,16 +1,44 @@
 require './board'
+require './player'
+require './AI_player'
 require 'pry-byebug'
 
 class Game
-  attr_accessor :board
+  @@NUM_OF_GUESSES = 12
+
+  attr_accessor :board, :player, :ai_player
 
   def initialize
+    create_player
+    @ai_player = AI_player.new
     @board = Board.new
   end
 
   def start_game
-    select_secret_colors
-    compare_guess_with_secret_colors(guess_secret_color)
+    @@game_mode_for_player = decode_or_set_code?
+    @@game_mode_for_player == 'Secret' ? select_secret_colors : play_as_guesser
+    play_as_guesser # Will trigger AI to play as guesser
+  end
+
+  def play_as_guesser
+    current_guess = 0
+    while current_guess < @@NUM_OF_GUESSES
+      compare_guess_with_secret_colors(guess_secret_color)
+      current_guess += 1
+    end
+  end
+
+  def create_player
+    puts 'Welcome to my Mastermind clone, what\'s your name?'
+    @player = Player.new(gets.chomp)
+  end
+
+  def decode_or_set_code?
+    puts 'Would you like to set the code or do you want to be the gusser?'
+    puts 'Press 1 for setting code'
+    puts 'Press 2 for being the codecracker'
+
+    p gets.chop == '1' ? 'Secret' : 'Guesser'
   end
 
   def guess_secret_color
@@ -26,6 +54,7 @@ class Game
     board.place_secret_colors(selection)
   end
 
+  @@is_secret_color_set = false
   def select_colors
     chosen_colors = []
     possible_colors = %w[Red Green Blue Purple Orange Yellow]
@@ -33,9 +62,14 @@ class Game
       puts 'Choose one of the following colors by entering the number next to it.'
       puts "1. #{possible_colors[0]}, 2. #{possible_colors[1]}, 3. #{possible_colors[2]}"
       puts "4. #{possible_colors[3]}, 5. #{possible_colors[4]}, 6. #{possible_colors[5]}"
-      color = possible_colors[gets.to_i - 1]
+      color = if @@game_mode_for_player == 'Secret' && !@@is_secret_color_set
+                possible_colors[gets.to_i - 1]
+              elsif @@game_mode_for_player == 'Secret' && @@is_secret_color_set
+                possible_colors[ai_player.choose_colors]
+              end
       chosen_colors.push(color)
     end
+    @@is_secret_color_set = true
     chosen_colors
   end
 
@@ -50,13 +84,9 @@ class Game
     num_of_correct = check_only_colors(checked_guess[0], checked_guess[1])
     keys = checked_guess[2]
     num_of_correct.values.sum.times { keys.push('WK') }
-    p keys
+    sleep 2
     board.place_keys(keys)
   end
-
-  # def award_keys(correct_col_pos, correct_col)
-  #   colored_key = Array.new()
-  # end
 
   def check_color_and_position(guess, secret)
     checked_guess = [[], [], []]
@@ -83,13 +113,5 @@ class Game
   end
 end
 
-# Take the latest guess of four colors, loop through secret colors, does
-
-# the secret contain the color of the guess? How many instances of that color?
-# TODO NR2, check if the colors are in the correct place.
-
 game = Game.new
 game.start_game
-
-# # game.guess_secret_color until game.game_over
-# game.start_game
